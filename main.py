@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 from board import Board
-from graphic import mainGUI
+from UI.gui import mainGUI
 import sys
 
 def main():
