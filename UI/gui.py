@@ -1,77 +1,10 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout,QLabel
+from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
 from PyQt5.QtCore import Qt,pyqtSignal, QThread, pyqtSlot
 from PyQt5.QtGui import *
 
 from board import Board
 from Theme.default import defaultTheme
-
-class SudokuTile(QLabel):
-    """
-    Single sudoku tile
-    """
-    def __init__(self, element=0 ,theme = defaultTheme(), parent=None):
-        super().__init__()
-        self.parent = parent
-        # Load theme
-        self.theme = theme
-        # Set property of tile
-        self.element = element
-        self.isStatic = self.element > 0 
-        self.init()
-
-    def init(self):
-        """TODO"""
-        self.colorTile()
-        self.setText(str(self.element))
-        self.setAlignment(Qt.AlignCenter)
-        self.setFixedSize(60, 60)
-    
-    def colorTile(self):
-        """TODO"""
-        if self.isStatic:
-            self.setStyleSheet(self.theme.static_tile)
-
-        elif self.element == 0: # If empty
-            if self.hasFocus():
-                self.setStyleSheet(self.theme.focused_empty_tile)
-            else:
-                self.setStyleSheet(self.theme.empty_tile)
-        else:
-            if self.hasFocus():
-                self.setStyleSheet(self.theme.focus_dynamic_ss)
-            else:
-                self.setStyleSheet(self.theme.dynamic_ss)
-
-    def updateElement(self, element=0):
-        """TODO"""
-        if not self.isStatic:
-            self.element = element
-            self.setText(str(self.element))
-            self.colorTile()
-            #self.update()
-            self.parent.eventModified.emit(self) # Notify parent classes
-
-    def focusInEvent(self, event):
-        self.colorTile()    
-        #print("Got focus")
-
-    def focusOutEvent(self, event):
-        self.colorTile()
-        #print("Lost focus")
-
-    def keyPressEvent(self, event):
-        """TODO"""
-        if event.key() <= Qt.Key_9 and event.key() >= Qt.Key_0:
-            self.updateElement(event.key() - Qt.Key_0)
-        else:
-            self.parent.keyPressEvent(event)
-        print("keypress",event.key())
-
-    def mouseReleaseEvent(self, event):
-        """TODO"""
-        if (event.button() == Qt.RightButton):
-            self.updateElement(0)
-
+from .tiles import SudokuTile
 
 class mainGUI(QDialog):
     eventModified = pyqtSignal(object, name='eventModified') 
@@ -91,13 +24,12 @@ class mainGUI(QDialog):
         # Layouts
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(3)
-        print("Debug1")
+
         for i in range(3): # TODO check if 3x3 grid is correct for part of Sudoku
             for j in range(3):
                 layout = QGridLayout()
                 layout.setSpacing(1)
                 self.grid_layout.addLayout(layout, i, j)
-        print("Debug2")
 
         # Add to screen
         self.main_layout = QVBoxLayout()
@@ -136,6 +68,12 @@ class mainGUI(QDialog):
         Display a menu 
         """
         pass
+    
+    def display_popup(self, title, message):
+        msg = QMessageBox()
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.exec_()
 
     def newGame(self):
         """
@@ -155,12 +93,28 @@ class mainGUI(QDialog):
         print("Show solution")
         self.createTiles(solution=True)
         self.updateGrid()
+    
+    def checkSolution(self):
+        """
+        Check if given tiles is correct. Title change to "win"
+        """
+        print("Check solution")
+        tiles = [tile.element for tile in self.tiles]
+        solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
+        if tiles == solvedTiles:
+            self.display_popup("Solution sheet","Congratulations! You managed to finish the game!")
+            print("You won!")
+        else:
+            self.display_popup("Solution sheet","Unfortunately, but the solution is not correct! Try again and check if you got correct answer!")
+            print("That is not correct solution!")
+        print(tiles, solvedTiles)
         
     def restartGame(self):
         """
         Reset changed tiles and go back to original board
         """
         print("Restart game")
+        self.win = False
         self.createTiles(solution=False)
         self.updateGrid()
     
@@ -170,6 +124,7 @@ class mainGUI(QDialog):
             Qt.Key_F1:self.restartGame,
             Qt.Key_F2:self.newGame,
             Qt.Key_F3:self.showSolution,
+            Qt.Key_F4:self.checkSolution,
         }
         if event.key() in events:
             events[event.key()]()
@@ -179,7 +134,7 @@ class mainGUI(QDialog):
     def update(self): 
         self.setStyleSheet(self.theme.widget_background)
 
-        
+
     @pyqtSlot()
     def quit(self):
         self.exit()  
