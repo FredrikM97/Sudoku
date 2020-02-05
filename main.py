@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 from board import Board
-from UI.gui import mainGUI
+from UI.gui import MainWindow_UI
 import sys
 
 def main():
@@ -8,7 +8,7 @@ def main():
 
 def init_GUI():
     app = QApplication(sys.argv)
-    game = mainGUI()
+    game = MainWindow_UI(board_base=3) 
     game.show()
     sys.exit(app.exec_())
 
