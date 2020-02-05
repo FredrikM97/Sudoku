@@ -13,6 +13,7 @@ Small Sudoku game in python with visual from PyQt5
 * Change size of Sudoku
 * Improve GUI
 * Enable threading and optimize code
+* Run board generation on separate threads
 * Remove reduntant code
 * Add more themes
 * Create exe file
