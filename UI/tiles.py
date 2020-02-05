@@ -1,17 +1,13 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import Qt
 
-from Theme.default import defaultTheme
-
 class SudokuTile(QLabel):
     """
     Single sudoku tile
     """
-    def __init__(self, element=0 ,theme = defaultTheme(), parent=None):
-        super().__init__()
+    def __init__(self, element=0 , parent=None):
+        super(SudokuTile,self).__init__(parent)
         self.parent = parent
-        # Load theme
-        self.theme = theme
         # Set property of tile
         self.element = element
         self.isStatic = self.element > 0 
@@ -30,21 +26,22 @@ class SudokuTile(QLabel):
         """
         Modify the color of a tile
         """
+        theme = self.parent.settings['theme']
         if self.isStatic:
-            self.setStyleSheet(self.theme.static_tile)
+            self.setStyleSheet(theme.static_tile)
 
         elif self.element == 0: # If empty
             # Focus on empty tile
             if self.hasFocus():
-                self.setStyleSheet(self.theme.focused_empty_tile)
+                self.setStyleSheet(theme.focused_empty_tile)
             else:
-                self.setStyleSheet(self.theme.empty_tile)
+                self.setStyleSheet(theme.empty_tile)
         else:
             # Focus on edited tile
             if self.hasFocus():
-                self.setStyleSheet(self.theme.focus_dynamic)
+                self.setStyleSheet(theme.focus_dynamic)
             else:
-                self.setStyleSheet(self.theme.dynamic)
+                self.setStyleSheet(theme.dynamic)
 
     def updateElement(self, element=0):
         """
@@ -54,7 +51,7 @@ class SudokuTile(QLabel):
             self.element = element
             self.setText(str(self.element))
             self.colorTile()
-            self.parent.eventModified.emit(self) # Notify parent classes
+
 
     def focusInEvent(self, event):
         self.colorTile()    
