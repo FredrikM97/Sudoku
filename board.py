@@ -1,9 +1,9 @@
 from random import sample
 from copy import deepcopy
 class Board:
-    def __init__(self, base=3, procent=70):
+    def __init__(self, base=3, difficulty=5):
         self.base = base
-        self.tiles2Remove=procent
+        self.tiles2Remove= difficulty/10 # Maybe not possible but why not
         self.side = base**2
         self.area = self.side**2
         self.tiles = []
@@ -19,7 +19,7 @@ class Board:
 
         self.tiles = self.combine_board(rows, cols)
         self.solvedTiles = deepcopy(self.tiles)
-        self.remove_numbers(self.tiles2Remove)
+        self.remove_numbers()
 
     def build_side(self, model):
         """
@@ -47,22 +47,22 @@ class Board:
         """
         return sample(size, len(size))
 
-    def remove_numbers(self, procentage):
+    def remove_numbers(self):
         """
         Remove percentage of total area
         """
     
         model = range(self.area)
-        cnt_removed_tiles = int(self.area * procentage/100)
+        cnt_removed_tiles = int(self.area * self.tiles2Remove)
 
         for tile in sample(model, cnt_removed_tiles):
             self.tiles[tile//self.side][tile%self.side] = 0
 
-    def pretty_prints(self, board):
+    def pretty_prints(self):
         tileSize = len(str(self.side))
         x = lambda n: f'{n or "0":{tileSize}}'
 
-        for line in board:
+        for line in self.tiles:
             row = [x(n) for n in line]
             print('['+' '.join(row) + "]")
  
