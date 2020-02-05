@@ -1,65 +1,111 @@
-from PyQt5.QtWidgets import QApplication,QSpacerItem,QDialogButtonBox, QSlider,QSizePolicy,QMessageBox,QCheckBox,QMainWindow,QLabel, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QApplication,QSpacerItem,QDialogButtonBox,QPushButton, QAction,QSlider,QSizePolicy,QMessageBox,QCheckBox,QMainWindow,QLabel, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
 from PyQt5.QtCore import Qt,pyqtSignal, QThread, pyqtSlot,QSettings,QSize,QRect
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+import sys
 
 from board import Board
 from UI.tiles import SudokuTile
-from settings.settings import SETTINGS
+from settings.config import user_settings
 from UI.preferences import settingGUI
 
-class MainWindow_UI(QDialog):
+class MainWindow_UI(QMainWindow):#QDialog
     def __init__(self, board_base=3, parent = None):
         super(MainWindow_UI, self).__init__(parent)
-        self.settings = SETTINGS.user_settings
+        self.settings = user_settings
         
         self.board = None
         self.configureUI()
-        self.newGame()
+        #self.newGame()
 
 
     def configureUI(self):
-        self.setGeometry(300, 300, 300, 220)
+        self.setGeometry(300, 300, 250, 220)
         self.setWindowTitle('Sudoko')
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
         
         # Layouts
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(3)
-        base = self.settings['board_base']
-        for i in range(base): # TODO check if 3x3 grid is correct for part of Sudoku
-            for j in range(base):
-                layout = QGridLayout()
-                layout.setSpacing(1)
-                self.grid_layout.addLayout(layout, i, j)
 
         # Add to screen
-        self.main_layout = QVBoxLayout()
-        self.main_layout.addLayout(self.grid_layout)
-        self.setLayout(self.main_layout)
+        self.updateBase()
+        self.central_widget = QWidget()    
+        self.central_widget.setLayout(self.grid_layout)
+        self.setCentralWidget(self.central_widget)
+        
+        # Init the status bar
+        self.status_bar()
+
+        # Display GUI
+        self.show()
+
+    def status_action(self, name, shortCut, statusTip, trigger):
+        action = QAction(name, self) 
+        action.setShortcut(shortCut)
+        action.setStatusTip(statusTip)
+        if not trigger == None:
+            action.triggered.connect(trigger)
+        return action
+
+    def status_bar(self):
+        """
+        Add statusbar to the menu
+        """
+        newGame = self.status_action("New game", "Ctrl+N", "Start new game", self.newGame)
+        resetGame = self.status_action("Reset game", "Ctrl+R", "Reset game", self.restartGame)
+        getSolution = self.status_action("Solution", "Ctrl+S", "Get the solution", self.showSolution)
+        exitGame = self.status_action("Exit", "Ctrl+Q", "Exit the App", self.quit)
+        settingsGame = self.status_action("Settings", "Ctrl+E", "Show settings", self.showSettings)
+        infoGame = self.status_action("Info", "Ctrl+I", "Show info", lambda titl="Information", message="Made by FredrikM97": self.display_popup(titl, message))
+        self.statusBar()
+        mainMenu = self.menuBar()
+
+        menu = [mainMenu.addMenu(index) for index in ['&File', '&Edit','&Info']]
+        action = [[newGame, resetGame, getSolution, exitGame],[settingsGame],[infoGame]]
+
+        # Add actions to GUI
+        for index,name in enumerate(menu):
+            for info in action[index]:
+                name.addAction(info)
 
     def createTiles(self, solution=False):
         """
         Create a new set of tiles from the board
         """
-        if not solution:
-            self.tiles = [SudokuTile(tile,self) for row in self.board.tiles for tile in row]
-        else: 
-            # TODO: Need a hotfix for performance, should keep possibility for edits even after solution given
-            for tile,_ in enumerate(self.tiles):
-                    self.tiles[tile].updateElement(self.solvedTiles[tile])
-            
+        if not self.board == None:
+            if not solution:
+                self.tiles = [SudokuTile(tile,self) for row in self.board.tiles for tile in row]
+                print("length of tiles:",len(self.tiles))
+            else: 
+                # TODO: Need a hotfix for performance, should keep possibility for edits even after solution given
+                for tile,_ in enumerate(self.tiles):
+                        self.tiles[tile].updateElement(self.solvedTiles[tile])
+    def updateBase(self):
+        print("Updating the base")
+        base = self.settings['board_base']
+        for i in range(base):
+            for j in range(base):
+                layout = QGridLayout()
+                layout.setSpacing(1)
+                self.grid_layout.addLayout(layout, i, j)
+
+
     def updateGrid(self):
         # TODO: Rework this ugly solution
-        side = self.board.side
-        base = self.board.base
-        for i in range(side):
-            for j in range(side):
+        if not self.board == None:            
+            side = self.board.side
+            base = self.board.base                
 
-                inner_layout = self.grid_layout.itemAtPosition(i // base, j // base)
-                cell = self.tiles[i * side + j]
-                inner_layout.addWidget(cell, i % base, j % base)
-                cell.setFocusPolicy(Qt.StrongFocus)
-                self.update()
+            for i in range(side):
+                for j in range(side):
+                    inner_layout = self.grid_layout.itemAtPosition(i // base, j // base)
+                    cell = self.tiles[i * side + j]
+
+                    inner_layout.addWidget(cell, i % base, j % base)
+                    cell.setFocusPolicy(Qt.StrongFocus)
+                    
+            self.update()
 
     def menu(self):
         """
@@ -69,8 +115,8 @@ class MainWindow_UI(QDialog):
     
     def display_popup(self, title, message):
         msg = QMessageBox()
-        msg.setWindowTitle(title)
-        msg.setText(message)
+        msg.setWindowTitle(str(title))
+        msg.setText(str(message)) 
         msg.exec_()
 
     def newGame(self):
@@ -78,11 +124,12 @@ class MainWindow_UI(QDialog):
         Create a new board
         """
         print("New Game")
-        self.board = Board(base=self.settings['board_base']) # TODO GUI should scale to board_base
+        self.board = Board(base=self.settings['board_base'], difficulty=self.settings['difficulty']) # TODO GUI should scale to board_base
         self.solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
         self.win = False
         self.createTiles()
         self.updateGrid()
+        self.board.pretty_prints()
         
 
     def showSolution(self):
@@ -91,7 +138,7 @@ class MainWindow_UI(QDialog):
         """
         print("Show solution")
         self.createTiles(solution=True)
-        self.updateGrid()
+        #self.updateGrid()
     
     def checkSolution(self):
         """
@@ -117,7 +164,7 @@ class MainWindow_UI(QDialog):
         self.createTiles(solution=False)
         self.updateGrid()
 
-    def updateSettings(self):
+    def showSettings(self):
         print("Update settings")
         self.settingGUI = settingGUI(self)
         self.settingGUI.show()
@@ -130,11 +177,11 @@ class MainWindow_UI(QDialog):
             Qt.Key_F2:self.newGame,
             Qt.Key_F3:self.showSolution,
             Qt.Key_F4:self.checkSolution,
-            Qt.Key_F5:self.updateSettings,
+            Qt.Key_F5:self.showSettings,
         }
         if event.key() in events:
             events[event.key()]()
-        print("Current event",event.key())
+
         
     @pyqtSlot()
     def update(self): 
@@ -144,5 +191,5 @@ class MainWindow_UI(QDialog):
 
     @pyqtSlot()
     def quit(self):
-        self.exit()  
+        sys.exit()  
              
