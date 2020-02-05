@@ -1,32 +1,33 @@
-from PyQt5.QtWidgets import QApplication, QMessageBox, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
-from PyQt5.QtCore import Qt,pyqtSignal, QThread, pyqtSlot
+from PyQt5.QtWidgets import QApplication,QSpacerItem,QDialogButtonBox, QSlider,QSizePolicy,QMessageBox,QCheckBox,QMainWindow,QLabel, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtCore import Qt,pyqtSignal, QThread, pyqtSlot,QSettings,QSize,QRect
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from board import Board
-from Theme.default import defaultTheme
-from .tiles import SudokuTile
+from UI.tiles import SudokuTile
+from settings.settings import SETTINGS
+from UI.preferences import settingGUI
 
-class mainGUI(QDialog):
-    eventModified = pyqtSignal(object, name='eventModified') 
-    def __init__(self, theme = defaultTheme(), parent = None):
-        super().__init__()
-        self.theme = theme
+class MainWindow_UI(QDialog):
+    def __init__(self, board_base=3, parent = None):
+        super(MainWindow_UI, self).__init__(parent)
+        self.settings = SETTINGS.user_settings
+        
         self.board = None
         self.configureUI()
-        self.win = False
         self.newGame()
 
 
     def configureUI(self):
         self.setGeometry(300, 300, 300, 220)
         self.setWindowTitle('Sudoko')
-
+        
         # Layouts
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(3)
-
-        for i in range(3): # TODO check if 3x3 grid is correct for part of Sudoku
-            for j in range(3):
+        base = self.settings['board_base']
+        for i in range(base): # TODO check if 3x3 grid is correct for part of Sudoku
+            for j in range(base):
                 layout = QGridLayout()
                 layout.setSpacing(1)
                 self.grid_layout.addLayout(layout, i, j)
@@ -36,19 +37,16 @@ class mainGUI(QDialog):
         self.main_layout.addLayout(self.grid_layout)
         self.setLayout(self.main_layout)
 
-
-
     def createTiles(self, solution=False):
         """
         Create a new set of tiles from the board
         """
         if not solution:
-            self.tiles = [SudokuTile(tile, self.theme,self) for row in self.board.tiles for tile in row]
+            self.tiles = [SudokuTile(tile,self) for row in self.board.tiles for tile in row]
         else: 
             # TODO: Need a hotfix for performance, should keep possibility for edits even after solution given
-            solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
             for tile,_ in enumerate(self.tiles):
-                    self.tiles[tile].updateElement(solvedTiles[tile])
+                    self.tiles[tile].updateElement(self.solvedTiles[tile])
             
     def updateGrid(self):
         # TODO: Rework this ugly solution
@@ -80,7 +78,8 @@ class mainGUI(QDialog):
         Create a new board
         """
         print("New Game")
-        self.board = Board()
+        self.board = Board(base=self.settings['board_base']) # TODO GUI should scale to board_base
+        self.solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
         self.win = False
         self.createTiles()
         self.updateGrid()
@@ -103,10 +102,10 @@ class mainGUI(QDialog):
         solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
         if tiles == solvedTiles:
             self.display_popup("Solution sheet","Congratulations! You managed to finish the game!")
-            print("You won!")
+
         else:
             self.display_popup("Solution sheet","Unfortunately, but the solution is not correct! Try again and check if you got correct answer!")
-            print("That is not correct solution!")
+  
         print(tiles, solvedTiles)
         
     def restartGame(self):
@@ -117,7 +116,13 @@ class mainGUI(QDialog):
         self.win = False
         self.createTiles(solution=False)
         self.updateGrid()
-    
+
+    def updateSettings(self):
+        print("Update settings")
+        self.settingGUI = settingGUI(self)
+        self.settingGUI.show()
+        self.settingGUI.exec_
+
     def keyPressEvent(self, event):
         events = {
             Qt.Key_Escape:self.quit,
@@ -125,6 +130,7 @@ class mainGUI(QDialog):
             Qt.Key_F2:self.newGame,
             Qt.Key_F3:self.showSolution,
             Qt.Key_F4:self.checkSolution,
+            Qt.Key_F5:self.updateSettings,
         }
         if event.key() in events:
             events[event.key()]()
@@ -132,7 +138,8 @@ class mainGUI(QDialog):
         
     @pyqtSlot()
     def update(self): 
-        self.setStyleSheet(self.theme.widget_background)
+        theme = self.settings['theme']
+        self.setStyleSheet(theme.widget_background)
 
 
     @pyqtSlot()
