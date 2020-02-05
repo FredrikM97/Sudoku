@@ -42,6 +42,8 @@ class SudokuTile(QLabel):
                 self.setStyleSheet(theme.focus_dynamic)
             else:
                 self.setStyleSheet(theme.dynamic)
+        info = "not " if self.isStatic else ""
+        self.setStatusTip("This tile is "+ info + "Editable")
 
     def updateElement(self, element=0):
         """
