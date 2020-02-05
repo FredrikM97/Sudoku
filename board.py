@@ -6,8 +6,10 @@ class Board:
         self.tiles2Remove=procent
         self.side = base**2
         self.area = self.side**2
-        self.board = []
-        self.SolvedBoard = []
+        self.tiles = []
+        self.solvedTiles = []
+
+        self.run()
 
     def run(self):
         model = range(self.base) 
@@ -15,8 +17,8 @@ class Board:
         rows = self.build_side(model)
         cols = self.build_side(model)
 
-        self.board = self.combine_board(rows, cols)
-        self.SolvedBoard = deepcopy(self.board)
+        self.tiles = self.combine_board(rows, cols)
+        self.solvedTiles = deepcopy(self.tiles)
         self.remove_numbers(self.tiles2Remove)
 
     def build_side(self, model):
@@ -54,11 +56,11 @@ class Board:
         cnt_removed_tiles = int(self.area * procentage/100)
 
         for tile in sample(model, cnt_removed_tiles):
-            self.board[tile//self.side][tile%self.side] = 0
+            self.tiles[tile//self.side][tile%self.side] = 0
 
     def pretty_prints(self, board):
         tileSize = len(str(self.side))
-        x = lambda n: f'{n or ".":{tileSize}}'
+        x = lambda n: f'{n or "0":{tileSize}}'
 
         for line in board:
             row = [x(n) for n in line]
