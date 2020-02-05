@@ -34,15 +34,17 @@ class SudokuTile(QLabel):
             self.setStyleSheet(self.theme.static_tile)
 
         elif self.element == 0: # If empty
+            # Focus on empty tile
             if self.hasFocus():
                 self.setStyleSheet(self.theme.focused_empty_tile)
             else:
                 self.setStyleSheet(self.theme.empty_tile)
         else:
+            # Focus on edited tile
             if self.hasFocus():
-                self.setStyleSheet(self.theme.focus_dynamic_ss)
+                self.setStyleSheet(self.theme.focus_dynamic)
             else:
-                self.setStyleSheet(self.theme.dynamic_ss)
+                self.setStyleSheet(self.theme.dynamic)
 
     def updateElement(self, element=0):
         """

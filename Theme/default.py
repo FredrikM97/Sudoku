@@ -19,14 +19,14 @@ class defaultTheme:
     widget_background = (
         'background-color: rgb(58, 60, 64);'
     )
-    # Dynamic cell (user specified)
-    dynamic_ss = (
+    # Edited tile
+    dynamic = (
         'background-color: rgb(255, 255, 255);'
         'color: rgb(0, 0, 0);'
         'font-size: 25pt; font-family: "Ubuntu";'
     )
-    # In-focus dynamic cells
-    focus_dynamic_ss = (
+    # Focused edited tile
+    focus_dynamic = (
         'background-color: rgb(255, 245, 225);'
         'color: rgb(0, 0, 0);'
         'font-size: 25pt; font-family: "Ubuntu";'		
