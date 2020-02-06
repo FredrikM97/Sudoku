@@ -1,0 +1,59 @@
+{
+    "default":{
+        "empty_tile":[
+            "background-color:rgb(255, 255, 255);",
+            "color: rgb(255, 255, 255);"
+        ],
+        "focused_empty_tile":[
+            "background-color:rgb(55, 58, 64);",
+            "color:rgb(55, 58, 64);"
+        ],
+        "static_tile":[
+            "background-color:rgb(222, 222, 222);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"
+        ],
+        "widget_background":[
+            "background-color:rgb(247, 247, 247);"
+        ],
+        "dynamic":[
+            "background-color: rgb(255, 255, 255);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"
+        ],
+        "focus_dynamic":[
+            "background-color:rgb(255, 245, 225);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"	
+        ]
+    },
+    
+    "Example1":{
+        "empty_tile":[
+            "background-color:rgb(255, 255, 255);",
+            "color: rgb(255, 255, 255);"
+        ],
+        "focused_empty_tile":[
+            "background-color:rgb(55, 58, 64);",
+            "color:rgb(55, 58, 64);"
+        ],
+        "static_tile":[
+            "background-color:rgb(222, 222, 222);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"
+        ],
+        "widget_background":[
+            "background-color:rgb(41, 242, 242);"
+        ],
+        "dynamic":[
+            "background-color: rgb(255, 255, 255);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"
+        ],
+        "focus_dynamic":[
+            "background-color:rgb(255, 245, 225);",
+            "color:rgb(0, 0, 0);",
+            "font-family:Ubuntu;"	
+        ]
+    }
+}
