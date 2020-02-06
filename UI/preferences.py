@@ -32,7 +32,7 @@ class settingGUI(QDialog):
             (QLabel("Theme:"), self.theme_handler()),
             (QLabel("Dark Theme:"), self.darktheme_handler()),
             (QLabel("Difficulty:"), self.difficulty_handler()),
-            (QLabel("board_base"),self.base_handler()),
+            (QLabel("Board_base:"),self.base_handler()),
             ('', self.restore_handler()),
             ('',self.accept_handler()),
             (QLabel("Create a new game in order for difficulty and board base to update"), '')
