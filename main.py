@@ -15,9 +15,9 @@ def init_GUI():
 def init_board():
     board = Board(base=3)
     print("Board:")
-    board.pretty_prints(board.tiles)
+    board.pretty_prints()
     print("Solved board:")
-    board.pretty_prints(board.solvedTiles)
+    board.pretty_prints()
 
 
 if __name__ == "__main__":
