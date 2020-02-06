@@ -9,9 +9,9 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
 #from settings.config import user_settings, default_settings
 #import settings.theme
 
-class settingGUI(QDialog):
+class SettingGUI(QDialog):
     def __init__(self, parent=None):
-        super(settingGUI, self).__init__(parent)
+        super(SettingGUI, self).__init__(parent)
         self.parent = parent
         self.modules = [item for item in self.get_modules()]
         self.user_settings = parent.user_settings
