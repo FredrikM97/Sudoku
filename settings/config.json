@@ -3,19 +3,35 @@
         "theme": "default",
         "darktheme": 0,
         "difficulty": 5,
-        "board_base": 3
+        "board_base": 3,
+        "statistics": {
+            "win": 0,
+            "games": 0,
+            "best_time": 0
+        }
     },
     "user_settings": {
         "theme": "default",
         "darktheme": 0,
         "difficulty": 5,
-        "board_base": 5
+        "board_base": 5,
+        "statistics": {
+            "win": 6,
+            "games": 11,
+            "best_time": 0
+        }
     },
     "global_settings": {
-        "difficulty_range":[1,10],
-        "base_range":[2,9],
-        "default_tileSize":60,
-        "tileSize": 60,
-        "grid_spacing":3
+        "difficulty_range": [
+            1,
+            10
+        ],
+        "base_range": [
+            2,
+            9
+        ],
+        "default_tileSize": 60,
+        "tileSize": 28.0,
+        "grid_spacing": 3
     }
 }
