@@ -8,8 +8,8 @@ Small Sudoku game in python with visual from PyQt5
 * F3: Show solution
 * F4: Check if given solution is correct
 
-![UI of game](https://github.com/FredrikM97/Sudoku/tree/master/screenshots/Interface.png)
-![Settings page for user](https://github.com/FredrikM97/Sudoku/tree/master/screenshots/settings.png)
+![UI of game](https://github.com/FredrikM97/Sudoku/blob/master/screenshots/Interface.png)
+![Settings page for user](https://github.com/FredrikM97/Sudoku/blob/master/screenshots/settings.png)
 
 ## Future features
 * Modify difficulty based on title
