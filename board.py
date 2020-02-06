@@ -65,9 +65,3 @@ class Board:
         for line in self.tiles:
             row = [x(n) for n in line]
             print('['+' '.join(row) + "]")
- 
-    def check_Solved(self):
-        """
-        TODO
-        """
-        pass
