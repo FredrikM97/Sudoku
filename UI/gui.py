@@ -1,13 +1,20 @@
-from PyQt5.QtWidgets import QApplication,QSpacerItem,QDialogButtonBox,QPushButton, QAction,QSlider,QSizePolicy,QMessageBox,QCheckBox,QMainWindow,QLabel, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
-from PyQt5.QtCore import Qt,pyqtSignal, QThread, pyqtSlot,QSettings,QSize,QRect
+import json
+import sys
+
+from PyQt5.QtCore import (QRect, QSettings, QSize, Qt, QThread, pyqtSignal,
+                          pyqtSlot)
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-import sys
-import json
+from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QDialog,
+                             QDialogButtonBox, QGridLayout, QGroupBox,
+                             QHBoxLayout, QLabel, QMainWindow, QMessageBox,
+                             QPushButton, QSizePolicy, QSlider, QSpacerItem,
+                             QVBoxLayout, QWidget)
+
 from board import Board
-from UI.tiles import SudokuTile
 #from settings.config import user_settings
 from UI.preferences import settingGUI
+from UI.tiles import SudokuTile
 
 
 class json_handler:
@@ -77,11 +84,12 @@ class MainWindow_UI(QMainWindow):#QDialog
         exitGame = self.status_action("Exit", "Ctrl+Q", "Exit the App", self.quit)
         settingsGame = self.status_action("Settings", "Ctrl+E", "Show settings", self.showSettings)
         infoGame = self.status_action("Info", "Ctrl+I", "Show info", lambda titl="Information", message="Made by https://github.com/FredrikM97": self.display_popup(titl, message))
+        correctGame = self.status_action("Correct game", "Ctrl+C", "Check if your board is correct", self.checkSolution)
         self.statusBar()
         mainMenu = self.menuBar()
 
         menu = [mainMenu.addMenu(index) for index in ['&File', '&Edit','&Info']]
-        action = [[newGame, resetGame, getSolution, exitGame],[settingsGame],[infoGame]]
+        action = [[newGame, resetGame, correctGame, exitGame],[settingsGame,getSolution],[infoGame]]
 
         # Add actions to GUI
         for index,name in enumerate(menu):
@@ -109,7 +117,7 @@ class MainWindow_UI(QMainWindow):#QDialog
         base = self.user_settings['board_base']
         # Layouts
         self.grid_layout = QGridLayout()
-        self.grid_layout.setSpacing(3)
+        self.grid_layout.setSpacing(1)
 
         for i in range(base):
             for j in range(base):
@@ -159,7 +167,7 @@ class MainWindow_UI(QMainWindow):#QDialog
         Create a new board
         """
         print("New Game")
-        self.global_settings['tileSize'] = self.geometry().height()//(self.user_settings['board_base']**2)
+        self.global_settings['tileSize'] = 0.90*self.geometry().height()//(self.user_settings['board_base']**2) 
         self.board = Board(base=self.user_settings['board_base'], difficulty=self.user_settings['difficulty']) # TODO GUI should scale to board_base
         self.solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
         self.win = False
@@ -181,14 +189,15 @@ class MainWindow_UI(QMainWindow):#QDialog
         """
         Check if given tiles is correct. Title change to "win"
         """
-        print("Check solution")
-        tiles = [tile.element for tile in self.tiles]
-        solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
-        if tiles == solvedTiles:
-            self.display_popup("Solution sheet","Congratulations! You managed to finish the game!")
+        if not self.board == None:
+            print("Check solution")
+            tiles = [tile.element for tile in self.tiles]
+            solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
+            if tiles == solvedTiles:
+                self.display_popup("Solution sheet","Congratulations! You managed to finish the game!")
 
-        else:
-            self.display_popup("Solution sheet","Unfortunately, but the solution is not correct! Try again and check if you got correct answer!")
+            else:
+                self.display_popup("Solution sheet","Unfortunately, but the solution is not correct! Try again and check if you got correct answer!")
   
         
     def restartGame(self):
@@ -228,9 +237,7 @@ class MainWindow_UI(QMainWindow):#QDialog
     def update(self): 
         theme = self.user_settings['theme']
         self.setStyleSheet(" ".join(self.themes[theme]['widget_background'])) #<-- Broken changes UI TODO: FIX IT
-        pass
         
     def quit(self):
         self.configs['users'].saveConfig()
         sys.exit()  
-             
