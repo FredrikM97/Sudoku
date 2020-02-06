@@ -1,10 +1,8 @@
-import json
 import sys
-
+from datetime import datetime
 from PyQt5.QtCore import (QRect, QSettings, QSize, Qt, QThread, pyqtSignal,
                           pyqtSlot)
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QDialog,
                              QDialogButtonBox, QGridLayout, QGroupBox,
                              QHBoxLayout, QLabel, QMainWindow, QMessageBox,
@@ -13,102 +11,56 @@ from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QDialog,
 
 from board import Board
 #from settings.config import user_settings
-from UI.preferences import settingGUI
+from UI.preferences import SettingGUI
+from UI.statistics import StatisticsGUI
 from UI.tiles import SudokuTile
-
-
-class json_handler:
-    def __init__(self, PATH=None):
-        self.path = PATH
-        self.data = self.openConfig()
-
-    def openConfig(self):
-        with open(self.path) as json_data_file:
-            data = json.load(json_data_file)
-            return data
-    def saveConfig(self):
-        with open(self.path, 'w') as outfile:
-            json.dump(self.data, outfile, ensure_ascii=False, indent=4)
-    
-
-
+from UI.importData import Json_handler
+from UI.status_bar import Status_bar
 
 class MainWindow_UI(QMainWindow):#QDialog
     def __init__(self, board_base=3, parent = None):
         super(MainWindow_UI, self).__init__(parent)
         self.configs = {
-            "users":json_handler("settings/config.json"),
-            "themes":json_handler("settings/theme.json")
+            "users":Json_handler("settings/config.json"),
+            "themes":Json_handler("settings/theme.json")
         }
         self.user_settings = self.configs['users'].data['user_settings']
         self.themes = self.configs['themes'].data
         self.global_settings = self.configs['users'].data['global_settings'] 
 
+        self.tiles=[]
+        self.solvedTiles=[]
         self.board = None
         self.configureUI()
 
     def configureUI(self):
         self.setGeometry(300, 300, 250, 220)
         self.setFixedSize(800,800)
-
         self.setWindowTitle('Sudoko')
+        
+        # Flags
         #self.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-        # Add to screen
-        self.update_grid_layout()
-        self.show()
+        
         # Init the status bar
-        self.status_bar()
+        Status_bar().status_bar(dialog=self)
 
         # Display GUI
         self.show()
 
-    def status_action(self, name, shortCut, statusTip, trigger):
-        """
-        Factorised creation of actions 
-        """
-        action = QAction(name, self) 
-        action.setShortcut(shortCut)
-        action.setStatusTip(statusTip)
-        if not trigger == None:
-            action.triggered.connect(trigger)
-        return action
-
-    def status_bar(self):
-        """
-        Add statusbar to the menu
-        """
-        newGame = self.status_action("New game", "Ctrl+N", "Start new game", self.newGame)
-        resetGame = self.status_action("Reset game", "Ctrl+R", "Reset game", self.restartGame)
-        getSolution = self.status_action("Solution", "Ctrl+S", "Get the solution", self.showSolution)
-        exitGame = self.status_action("Exit", "Ctrl+Q", "Exit the App", self.quit)
-        settingsGame = self.status_action("Settings", "Ctrl+E", "Show settings", self.showSettings)
-        infoGame = self.status_action("Info", "Ctrl+I", "Show info", lambda titl="Information", message="Made by https://github.com/FredrikM97": self.display_popup(titl, message))
-        correctGame = self.status_action("Correct game", "Ctrl+C", "Check if your board is correct", self.checkSolution)
-        self.statusBar()
-        mainMenu = self.menuBar()
-
-        menu = [mainMenu.addMenu(index) for index in ['&File', '&Edit','&Info']]
-        action = [[newGame, resetGame, correctGame, exitGame],[settingsGame,getSolution],[infoGame]]
-
-        # Add actions to GUI
-        for index,name in enumerate(menu):
-            for info in action[index]:
-                name.addAction(info)
-
-    def createTiles(self, solution=False):
+    def modifyTiles(self, tiles=[], solvedTiles=[], solution=False) -> list:
         """
         Create a new set of tiles from the board
         """
         if not self.board == None:
             if not solution:
-                self.tiles = [SudokuTile(tile,self) for row in self.board.tiles for tile in row]
+                tiles = [SudokuTile(tile,self) for row in self.board.tiles for tile in row]
             else: 
-                # TODO: Need a hotfix for performance, should keep possibility for edits even after solution given
-                for tile,_ in enumerate(self.tiles):
-                        self.tiles[tile].updateElement(self.solvedTiles[tile])
+                for tile,_ in enumerate(tiles):
+                        tiles[tile].updateElement(solvedTiles[tile])
 
-    def update_grid_layout(self):
+            return tiles
+
+    def update_grid_base(self) -> None:
         """
         If the base is modified this needs to be updated.
         Handled from preferences.py
@@ -125,30 +77,29 @@ class MainWindow_UI(QMainWindow):#QDialog
                 layout.setSpacing(1)
                 self.grid_layout.addLayout(layout, i, j)
 
-        
         self.central_widget = QWidget()    
         self.central_widget.setLayout(self.grid_layout)
-        self.setCentralWidget(self.central_widget)
-        
+        self.setCentralWidget(self.central_widget)     
         
 
-    def updateGrid(self):
+    def updateGrid(self, tiles)->None:
         """
         Update the grid on create and reset board.
-        """
-        if not self.board == None:            
-            side = self.board.side
-            base = self.board.base                
+        """   
+        if self.board == None: return None
 
-            for i in range(side):
-                for j in range(side):
-                    inner_layout = self.grid_layout.itemAtPosition(i // base, j // base)
-                    cell = self.tiles[i * side + j]
+        base = self.user_settings['board_base']
+        side = base**2
 
-                    inner_layout.addWidget(cell, i % base, j % base)
-                    cell.setFocusPolicy(Qt.StrongFocus)
+        for i in range(side):
+            for j in range(side):
+                inner_layout = self.grid_layout.itemAtPosition(i // base, j // base)
+                cell = tiles[i * side + j]
+
+                inner_layout.addWidget(cell, i % base, j % base)
+                cell.setFocusPolicy(Qt.StrongFocus)
                     
-            #self.update()
+        self.game_time = datetime.now()
 
     def menu(self):
         """
@@ -156,12 +107,6 @@ class MainWindow_UI(QMainWindow):#QDialog
         """
         pass
     
-    def display_popup(self, title, message):
-        msg = QMessageBox()
-        msg.setWindowTitle(str(title))
-        msg.setText(str(message)) 
-        msg.exec_()
-
     def newGame(self):
         """
         Create a new board
@@ -170,21 +115,27 @@ class MainWindow_UI(QMainWindow):#QDialog
         self.global_settings['tileSize'] = 0.90*self.geometry().height()//(self.user_settings['board_base']**2) 
         self.board = Board(base=self.user_settings['board_base'], difficulty=self.user_settings['difficulty']) # TODO GUI should scale to board_base
         self.solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
-        self.win = False
-        self.createTiles()
-        self.update_grid_layout()
-        self.updateGrid()
+        self.tiles = self.modifyTiles()
+        self.update_grid_base()
+        self.updateGrid(tiles=self.tiles)
+        self.user_settings['statistics']['games'] += 1
 
-        
+    def restartGame(self):
+        """
+        Reset changed tiles and go back to original board
+        """
+        print("Restart game")
+        self.win = False
+        self.tiles = self.modifyTiles(solution=False)
+        self.updateGrid(self.tiles)
 
     def showSolution(self):
         """
         Fill all tiles with solution
         """
         print("Show solution")
-        self.createTiles(solution=True)
-        #self.updateGrid()
-    
+        self.tiles = self.modifyTiles(self.tiles,solvedTiles=self.solvedTiles,solution=True)
+        
     def checkSolution(self):
         """
         Check if given tiles is correct. Title change to "win"
@@ -194,29 +145,42 @@ class MainWindow_UI(QMainWindow):#QDialog
             tiles = [tile.element for tile in self.tiles]
             solvedTiles = [tile for row in self.board.solvedTiles for tile in row]
             if tiles == solvedTiles:
-                self.display_popup("Solution sheet","Congratulations! You managed to finish the game!")
+                self.user_settings['statistics']['win'] += 1
+
+                time = int((datetime.now()-self.game_time).total_seconds())
+                best_time = self.user_settings['statistics']['best_time']
+                if best_time > time or best_time == 0:
+                    print("Game time:", time)
+                    self.user_settings['statistics']['best_time'] = time
+                    
+                self.display_popup("Solution sheet","Congratulations! You managed to finish the game! Your game time is: " + str(time) + " seconds")
 
             else:
                 self.display_popup("Solution sheet","Unfortunately, but the solution is not correct! Try again and check if you got correct answer!")
-  
-        
-    def restartGame(self):
-        """
-        Reset changed tiles and go back to original board
-        """
-        print("Restart game")
-        self.win = False
-        self.createTiles(solution=False)
-        self.updateGrid()
 
-    def showSettings(self):
+
+    def openSettings(self):
         """
         Open settings menu
         """
         print("Update settings")
-        self.settingGUI = settingGUI(self)
+        self.settingGUI = SettingGUI(self)
         self.settingGUI.show()
         self.settingGUI.exec_
+
+    def openStatistics(self):
+        print("Update statistics")
+        self.statisticsGUI = StatisticsGUI(self)
+        self.statisticsGUI.show()
+        self.statisticsGUI.exec_
+
+    def display_popup(self, title, message)->None:
+        msg = QMessageBox()
+        msg.setWindowTitle(str(title))
+        msg.setText(str(message)) 
+        msg.exec_()
+
+        
 
     def keyPressEvent(self, event):
         """
@@ -228,7 +192,7 @@ class MainWindow_UI(QMainWindow):#QDialog
             Qt.Key_F2:self.newGame,
             Qt.Key_F3:self.showSolution,
             Qt.Key_F4:self.checkSolution,
-            Qt.Key_F5:self.showSettings,
+            Qt.Key_F5:self.openSettings,
         }
         if event.key() in events:
             events[event.key()]()
