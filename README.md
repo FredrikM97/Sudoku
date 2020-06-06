@@ -1,6 +1,12 @@
 # Sudoku
 Small Sudoku game in python with visual from PyQt5
 
+## How to run
+* Run the main.py file
+
+## Needed packages
+* PyQt5
+
 ## Features
 
 * Restart game
